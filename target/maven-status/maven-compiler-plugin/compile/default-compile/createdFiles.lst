@@ -1,0 +1,7 @@
+org\triska\service\CameraService.class
+org\triska\dao\impl\CameraDaoImpl.class
+org\triska\service\impl\CameraServiceImpl.class
+org\triska\model\Camera.class
+org\triska\dao\CameraDao.class
+org\triska\controller\CameraController.class
+org\triska\controller\TimedActions.class
