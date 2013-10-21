@@ -8,6 +8,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Lob;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -28,6 +30,7 @@ public class Camera {
 	@Lob
 	private byte[] capturedImage;
 	@Column
+	@Temporal(TemporalType.TIMESTAMP)
 	private Date currentTime;
 
 	public Camera() {
@@ -91,10 +94,4 @@ public class Camera {
 	public void setCurrentTime(Date currentTime) {
 		this.currentTime = currentTime;
 	}
-	
-	public String getByteArrayString()
-	{
-	   return new String(this.capturedImage);
-	}
-
 }

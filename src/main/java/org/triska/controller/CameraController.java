@@ -165,7 +165,6 @@ public class CameraController {
 		DataInputStream dis;
 		BufferedImage image = null;
 		InputStream is = null;
-		// URL u = new URL("http://81.91.213.138:8080/camera86");
 		URL u;
 		try {
 			u = new URL(imageURL);
@@ -173,7 +172,6 @@ public class CameraController {
 			is = huc.getInputStream();
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
-
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -187,6 +185,13 @@ public class CameraController {
 		} catch (ImageFormatException | IOException e) {
 			e.printStackTrace();
 		}
+		try {
+			dis.close();
+			huc.disconnect();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
 //		System.out.println(image.toString());
 		// ImageIO.write(image, "jpg", new File("img2.jpg"));
 		return image;
