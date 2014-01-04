@@ -27,6 +27,10 @@ public class Camera {
 	@Column
 	private String ipaddress;
 	@Column
+	private double lat;
+	@Column
+	private double lng;
+	@Column
 	@Lob
 	private byte[] capturedImage;
 	@Column
@@ -37,12 +41,14 @@ public class Camera {
 
 	}
 
-	public Camera(int cameraId, String crossroadName, String direction, String ipaddress, byte[] capturedImage, Date currentTime) {
+	public Camera(int cameraId, String crossroadName, String direction, String ipaddress, double lat, double lng, byte[] capturedImage, Date currentTime) {
 		super();
 		this.cameraId = cameraId;
 		this.crossroadName = crossroadName;
 		this.direction = direction;
 		this.ipaddress = ipaddress;
+		this.lat = lat;
+		this.lng = lng;
 		this.capturedImage = capturedImage;
 		this.currentTime = currentTime;
 	}
@@ -94,4 +100,22 @@ public class Camera {
 	public void setCurrentTime(Date currentTime) {
 		this.currentTime = currentTime;
 	}
+
+	public double getLat() {
+		return lat;
+	}
+
+	public void setLat(double lat) {
+		this.lat = lat;
+	}
+
+	public double getLng() {
+		return lng;
+	}
+
+	public void setLng(double lng) {
+		this.lng = lng;
+	}
+
+	
 }

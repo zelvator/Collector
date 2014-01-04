@@ -36,10 +36,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.triska.model.Camera;
 import org.triska.service.CameraService;
 
-import com.sun.image.codec.jpeg.ImageFormatException;
-import com.sun.image.codec.jpeg.JPEGCodec;
-import com.sun.image.codec.jpeg.JPEGImageDecoder;
-
 @Controller
 public class CameraController {
 	@Autowired
@@ -63,9 +59,9 @@ public class CameraController {
 		for (Camera camera : cameras) {
 			BufferedImage img = getCapturedImage(camera.getIpaddress());
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			byte[] imageInByte = null ;
+			byte[] imageInByte = null;
 			try {
-				ImageIO.write( img, "jpg", baos );
+				ImageIO.write(img, "jpg", baos);
 				baos.flush();
 				imageInByte = baos.toByteArray();
 				baos.close();
@@ -75,7 +71,7 @@ public class CameraController {
 			camera.setCaptureIdmage(imageInByte);
 			camera.setCurrentTime(new Date());
 			cameraService.edit(camera);
-			
+
 		}
 	}
 
@@ -114,6 +110,7 @@ public class CameraController {
 		return "camera";
 	}
 
+
 	public void createStructure() {
 		String address = "http://mapy.ovanet.cz/krizovatky/";
 		URL url = null;
@@ -128,38 +125,50 @@ public class CameraController {
 		}
 
 		Elements scripts = doc.select("script");
-		Pattern p = Pattern.compile("(?is)krizovatka.push\\('(.+?)'\\);"); // krizovatka.push('??');
+		Pattern p = Pattern.compile("(?is)var myLatLng(.+?)<\\\\/div>'\\)", Pattern.MULTILINE); 
 		String crossroad = "";
 		String value = "";
-		String oldvalue = "";
+		String ipAddress = "";
+		String urlTag = "";
+		String latlng = "";
 		for (Element script : scripts) {
 			Matcher m = p.matcher(script.html());
-			boolean crossroadComplete = false;
-			while (m.find()) {
+			while(m.find()){
 				value = m.group(1);
-				if (!oldvalue.isEmpty()) {
-					if (value.contains("http") && !oldvalue.contains("http")) {
-						Camera camera = new Camera();
-						camera.setCrossroadName(crossroad);
-						camera.setDirection(oldvalue);
-						camera.setIpaddress(value);
-						cameraService.add(camera);
-						System.out.println("Krizovatka: " + crossroad + " smer: " + oldvalue + " IP: " + value);
-						crossroadComplete = true;
-					} else {
-						crossroad = oldvalue;
-					}
+				Pattern p2 = Pattern.compile("(?is)google.maps.LatLng\\((.+?)\\);"); 
+				Matcher m2 = p2.matcher(value);
+				while (m2.find()){
+					latlng = m2.group(1);
 				}
-				if (crossroadComplete) {
-					oldvalue = "";
-					crossroadComplete = false;
-				} else {
-					oldvalue = value;
+				p2 = Pattern.compile("(?is)<b>(.+?)<\\\\/b>"); 
+				m2 = p2.matcher(value);
+				while (m2.find()) {
+					crossroad = m2.group(1);
 				}
+				p2 = Pattern.compile("(?is)<a href=\"javascript:changeKameru\\((.+?)\\);\">"); 
+				m2 = p2.matcher(value);
+				m2 = p2.matcher(value);
+				while (m2.find()) {
+					urlTag = m2.group(1);
+					urlTag = urlTag.replace("\\'", "");
+					String[] urlData = urlTag.split(",");
+					ipAddress = "http://"+urlData[0]+"/?camera="+urlData[2].trim()+"&quality=1&type=stream";
+					String[] latlngSplit = latlng.split(",");
+//					System.out.println("Krizovatka: " + crossroad + " smer: " + urlData[1] + " IP: " + ipAddress);
+					Camera camera = new Camera();
+					camera.setCrossroadName(crossroad);
+					camera.setDirection(urlData[1]);
+					camera.setLat(Double.parseDouble(latlngSplit[0]));
+					camera.setLng(Double.parseDouble(latlngSplit[1]));
+//					camera.setLatLng(latlng);
+					camera.setIpaddress(ipAddress);
+					cameraService.add(camera);
+				}
+				
 			}
 		}
 	}
-
+	
 	public BufferedImage getCapturedImage(String imageURL) {
 		HttpURLConnection huc = null;
 		DataInputStream dis;
@@ -179,11 +188,10 @@ public class CameraController {
 		BufferedInputStream bis = new BufferedInputStream(is);
 		dis = new DataInputStream(bis);
 		readLine(4, dis);
-		JPEGImageDecoder decoder = JPEGCodec.createJPEGDecoder(dis);
 		try {
-			image = decoder.decodeAsBufferedImage();
-		} catch (ImageFormatException | IOException e) {
-			e.printStackTrace();
+			image = ImageIO.read(dis);
+		} catch (IOException e1) {
+			e1.printStackTrace();
 		}
 		try {
 			dis.close();
@@ -191,8 +199,8 @@ public class CameraController {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
-//		System.out.println(image.toString());
+
+		// System.out.println(image.toString());
 		// ImageIO.write(image, "jpg", new File("img2.jpg"));
 		return image;
 	}
@@ -208,8 +216,8 @@ public class CameraController {
 			while (!end) {
 				dis.read(byteBuf, 0, lineEndBytes.length);
 				String t = new String(byteBuf);
-//				System.out.print(t); // uncomment if you want to see what the
-										// lines actually look like
+				// System.out.print(t); // uncomment if you want to see what the
+				// lines actually look like
 				if (t.equals(lineEnd))
 					end = true;
 			}
@@ -224,11 +232,11 @@ public class CameraController {
 			readLine(dis);
 		}
 	}
-	
+
 	@RequestMapping(value = "/images/{cameraId}")
 	@ResponseBody
-	public byte[] getCameraImage(@PathVariable int cameraId)  {
-	  Camera camera = cameraService.getCamera(cameraId);
-	  return camera.getCapturedImage();
+	public byte[] getCameraImage(@PathVariable int cameraId) {
+		Camera camera = cameraService.getCamera(cameraId);
+		return camera.getCapturedImage();
 	}
 }
