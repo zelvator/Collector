@@ -44,11 +44,26 @@ body {
 		var marker = new google.maps.Marker({
 			position : myLatLng,
 			map : map,
-			title : "${camera.crossroadName}"
+			title : "${camera.crossroadName} \n Lat (y): ${camera.lat} /Lng (x): ${camera.lng}"
 		});
 
 		markers.push(marker);
 
+		</c:forEach>
+		
+		<c:forEach items="${polylineList}" var="polyline">
+		
+		var pathCoordinates = [
+		         new google.maps.LatLng("${polyline.pointA.lat}", "${polyline.pointA.lng}"),
+		         new google.maps.LatLng("${polyline.pointB.lat}", "${polyline.pointB.lng}")
+		          ];
+		var crossPath = new google.maps.Polyline({
+		      path: pathCoordinates,
+		      strokeColor: "#0000FF",
+		      strokeOpacity: 1.0,
+		      strokeWeight: 2,
+		      map: map
+		});
 		</c:forEach>
 	}
 	google.maps.event.addDomListener(window, 'load', initialize);

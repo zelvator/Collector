@@ -6,5 +6,7 @@
 <hibernate-configuration>
     <session-factory>        
         <mapping class="org.triska.model.Camera" />
+        <mapping class="org.triska.model.Polyline" />
+        <mapping class="org.triska.model.LatLng" />
     </session-factory>         
 </hibernate-configuration>
