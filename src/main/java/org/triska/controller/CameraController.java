@@ -18,6 +18,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -39,6 +40,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.triska.model.Camera;
+import org.triska.model.Crossroad;
 import org.triska.model.LatLng;
 import org.triska.model.Polyline;
 import org.triska.service.CameraService;
@@ -53,17 +55,17 @@ public class CameraController {
 
 	@Scheduled(cron = "0 0 0 * * ?")
 	public void onSchedule() {
-		cameraService.deleteAllCameras();
+		// cameraService.deleteAllCameras();
 		polylineService.deleteAllPolylines();
-		createStructure();
+		// createStructure();
 		createPolylines();
 	}
 
 	@PostConstruct
 	public void onStartup() {
-		cameraService.deleteAllCameras();
+		// cameraService.deleteAllCameras();
 		polylineService.deleteAllPolylines();
-		createStructure();
+		// createStructure();
 		createPolylines();
 	}
 
@@ -97,7 +99,6 @@ public class CameraController {
 		map.put("polylineList", polylineService.getAllPolyline());
 		return "camera";
 	}
-	
 
 	//
 	// @RequestMapping(value = "/camera.do", method = RequestMethod.POST)
@@ -129,72 +130,137 @@ public class CameraController {
 
 	public void createPolylines() {
 		List<Camera> cameras = cameraService.getAllCamera();
-		Iterator<Camera> it_cam = cameras.iterator();
+
 		List<Polyline> list = new ArrayList<>();
-		
-		while (it_cam.hasNext()) {
-			Camera cam = (Camera) it_cam.next();
-			String crossRoad = cam.getCrossroadName();
-			String[] crossRoadSeparated = getCrossroadSeperated(crossRoad);
-			
-			
-//			System.out.println(Arrays.toString(crossRoadSeparated));
-			/*
-			 * Myslenka vecera: nekde tu dat to porovnavani x a y podle toho jestli to ma stejnou cast textu nebo ne
-			 * to co je pod timhle prekopat a mozna pridat objektu Polyline i atribut s krizovatkou nebo necim...
-			 */
-			if(crossRoadSeparated.length > 1){
-				Iterator<Camera> it = cameras.iterator();
-				while(it.hasNext()){
-					Camera c = it.next();
-					if (c.getCrossroadName().contains(crossRoadSeparated[0])){
-						list.add(new Polyline(new LatLng(cam.getLat(), cam.getLng()), new LatLng(c.getLat(), c.getLng())));
-//						System.out.println("SET: " + crossRoadSeparated[0] + ", " + c.getCrossroadName());
-					} else if (c.getCrossroadName().contains(crossRoadSeparated[1])){
-						list.add(new Polyline(new LatLng(cam.getLat(), cam.getLng()), new LatLng(c.getLat(), c.getLng())));
-//						System.out.println("SET: " + crossRoadSeparated[1] + ", " + c.getCrossroadName());
+
+		Set<Camera> s = new HashSet<Camera>();
+		s.addAll(cameras);
+
+		Stack<Crossroad> crossroads = new Stack<>();
+		List<Polyline> pom = new ArrayList<>();
+
+		for (Camera cam : s) {
+			String[] crossRoadSeparated = getCrossroadSeperated(cam.getCrossroadName());
+			crossroads.push(new Crossroad(crossRoadSeparated, cam.getLat(), cam.getLng()));
+		}
+
+		while (!crossroads.empty()) {
+			Crossroad crossroad = crossroads.peek();
+			Stack<Crossroad> crossroads2 = new Stack<>();
+			crossroads2.addAll(crossroads);
+			boolean found = false;
+			for (Crossroad crossroad2 : crossroads2) {
+
+				for (int i = 0; i < crossroad.getName().length; i++) {
+					for (int j = 0; j < crossroad2.getName().length; j++) {
+						if (crossroad.getName()[i].equals(crossroad2.getName()[j])) {
+
+							StringBuilder str = new StringBuilder();
+							for (String nam : crossroad.getName()) {
+								if (str.toString().equals(""))
+									str.append(nam);
+								else
+									str.append(" x " + nam);
+							}
+							StringBuilder str2 = new StringBuilder();
+							for (String nam : crossroad2.getName()) {
+								if (str2.toString().equals(""))
+									str2.append(nam);
+								else
+									str2.append(" x " + nam);
+							}
+							pom.add(new Polyline(new String[] { str.toString(), str2.toString() },
+									new LatLng(crossroad.getLat(), crossroad.getLng()), new LatLng(crossroad2.getLat(), crossroad2.getLng())));
+							found = true;
+						}
 					}
 				}
 			}
+
+			if (found) {
+				// remove
+				crossroads.pop();
+			} else {
+				// find other crossroad and remove
+				crossroads.pop();
+			}
+
+			Set<Polyline> pomSet = new HashSet<Polyline>();
+			pomSet.addAll(pom);
+
+			// found nearest...
+
+			list.addAll(getNearestPolylines(pomSet));
+			pom.clear();
+			pomSet.clear();
+
 		}
-		
-		Set<Polyline> s= new HashSet<Polyline>();
-	    s.addAll(list);         
-//	    list.clear();
-////	    list = new ArrayList<Polyline>();
-//	    list.addAll(s);      
-//	    int count = 0;
-	    
-	    //do databaze
-	    for (Polyline polyline : s) {
-//	    	count++;
-	    	polylineService.add(polyline);
-//			System.out.println("Cislo: " + count+" " + polyline.toString());
+
+		int count = 0;
+
+		// do databaze
+		for (Polyline polyline : list) {
+			// count++;
+			polylineService.add(polyline);
+			// System.out.println("Cislo: " + count+" " + polyline.toString());
 		}
-	    
-//	    List<Polyline> poll = polylineService.getAllPolyline();
-//	    for (Polyline polyline : s) {
-//	    	count++;
-////	    	polylineService.add(polyline);
-//			System.out.println("Cislo: " + count+" " + polyline.toString());
-//		}
+
+		List<Polyline> poll = polylineService.getAllPolyline();
+		for (Polyline polyline : poll) {
+			count++;
+			// polylineService.add(polyline);
+			System.out.println("Cislo: " + count + " " + polyline.toString());
+		}
 	}
 
-//	public String getSecondCrossroad(String[] crossRoadSeparated){
-//		
-//		if (c.getCrossroadName().contains(crossRoadSeparated[0])){
-//			System.out.println("SET: " + crossRoadSeparated[0] + ", " + c.getCrossroadName());
-//		} else if (c.getCrossroadName().contains(crossRoadSeparated[1])){
-//			System.out.println("SET: " + crossRoadSeparated[1] + ", " + c.getCrossroadName());
-//		}
-//	}
-	public String[] getCrossroadSeperated(String crossRoad){
+	public double distance(double lat1, double lng1, double lat2, double lng2) {
+		double diffLat = lat2 - lat1;
+		double diffLng = lng2 - lng2;
+
+		return Math.sqrt(Math.pow(diffLat, 2) + Math.pow(diffLng, 2));
+	}
+
+	public List<Polyline> getNearestPolylines(Set<Polyline> pomSet) {
+		List<Polyline> polylines = new ArrayList<>();
+		List<Polyline> polylineStack = new ArrayList<>();
+		polylineStack.addAll(pomSet);
+		double distance = 0;
+		Polyline nearest = null;
+		Polyline secondNearest = null;
+		double shortest = Double.MAX_VALUE;
+		
+		for (Polyline polyline : polylineStack) {
+			distance = distance(polyline.getPointA().getLat(), polyline.getPointA().getLng(), polyline.getPointB().getLat(), polyline.getPointB().getLng());
+			if (distance < shortest && distance >= 0.0001) {
+				shortest = distance;
+				 
+				secondNearest = nearest;
+				nearest = polyline;
+				
+			}
+		}
+		
+		if (nearest != null) {
+			 polylines.add(nearest);
+			 
+			 if(secondNearest != null){
+				 polylines.add(secondNearest);
+			 }
+		}
+
+
+		return polylines;
+
+	}
+
+
+	public String[] getCrossroadSeperated(String crossRoad) {
 		String splitBySlash = "/";
 		String splitByCross = "x";
 		String splitByBigCross = "X";
-		
+
 		String[] crossRoadSeparated = null;
-		
+
 		if (crossRoad.contains(splitBySlash)) {
 			crossRoadSeparated = crossRoad.split(splitBySlash);
 		} else if (crossRoad.contains(splitByCross) && !crossRoad.contains(splitBySlash)) {
@@ -210,8 +276,7 @@ public class CameraController {
 		}
 		return crossRoadSeparated;
 	}
-	
-	
+
 	public void createStructure() {
 		String address = "http://mapy.ovanet.cz/krizovatky/";
 		URL url = null;

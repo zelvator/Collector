@@ -117,5 +117,21 @@ public class Camera {
 		this.lng = lng;
 	}
 
+	@Override
+	public int hashCode() {
+		 return (Double.valueOf(this.lat).hashCode() + Double.valueOf(this.lng).hashCode() + this.crossroadName.hashCode());        
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+	    // TODO Auto-generated method stub
+	    if(obj instanceof Camera)
+	    {
+	    	Camera temp = (Camera) obj;
+	        if(this.lat == temp.lat && this.lng== temp.lng && this.crossroadName.equals(temp.crossroadName))
+	            return true;
+	    }
+	    return false;
+	}
 	
 }

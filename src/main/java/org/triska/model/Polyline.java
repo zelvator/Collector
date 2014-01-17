@@ -16,6 +16,9 @@ public class Polyline {
 	@Column
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private int idPolyline;
+	@Column
+	private String[] name;
+	
 	@ManyToOne (cascade=CascadeType.ALL)
 	@JoinColumn(name = "pointA")
 	private LatLng pointA;
@@ -24,22 +27,41 @@ public class Polyline {
 	private LatLng pointB;
 
 	
-	public Polyline(int idPolyline, LatLng pointA, LatLng pointB) {
-		this.idPolyline = idPolyline;
-		this.pointA = pointA;
-		this.pointB = pointB;
-	}
-	
 	public Polyline(){
 		
 	}
 
-	public Polyline(LatLng pointA, LatLng pointB) {
+
+	
+	public Polyline(String[] name, LatLng pointA, LatLng pointB) {
+		this.name = name;
 		this.pointA = pointA;
 		this.pointB = pointB;
 	}
 
-	
+
+
+	public Polyline(int idPolyline, String[] name, LatLng pointA, LatLng pointB) {
+		this.idPolyline = idPolyline;
+		this.name = name;
+		this.pointA = pointA;
+		this.pointB = pointB;
+	}
+
+
+
+	public String[] getName() {
+		return name;
+	}
+
+
+
+	public void setName(String[] name) {
+		this.name = name;
+	}
+
+
+
 	public int getIdPolyline() {
 		return idPolyline;
 	}
@@ -85,6 +107,13 @@ public class Polyline {
 
 	@Override
 	public String toString() {
-		return "Point A: " + pointA.toString() + " Point B: " + pointB.toString();
+		StringBuilder s = new StringBuilder();
+		for (String nam : name) {
+			if(s.toString().equals(""))
+			s.append(nam);
+			else
+			s.append(" X " + nam);
+		}
+		return "Name: " + s.toString() + ", Point A: " + pointA.toString() + " Point B: " + pointB.toString();
 	}
 }
