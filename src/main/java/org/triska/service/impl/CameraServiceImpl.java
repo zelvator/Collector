@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.triska.dao.CameraDao;
 import org.triska.model.Camera;
+import org.triska.model.CameraPic;
 import org.triska.service.CameraService;
 
 @Service
@@ -43,5 +44,33 @@ public class CameraServiceImpl implements CameraService {
 	@Transactional
 	public void deleteAllCameras() {
 		cameraDao.deleteAllCameras();
+	}
+	
+	@Transactional
+	public CameraPic getLastPic(int cameraId){
+		return cameraDao.getLastPic(cameraId);
+	}
+	
+	@Transactional
+	public List<CameraPic> geCamerasPicsByCrossroad(double lat, double lng){
+		return cameraDao.geCamerasPicsByCrossroad(lat, lng);
+	}
+
+	@Transactional
+	public List<CameraPic> getCameraPics(int cameraId) {
+		return cameraDao.getCameraPics(cameraId);
+	}
+	
+	@Transactional
+	public List<Camera> getAllCameraWithPic(){
+		return cameraDao.getAllCameraWithPic();
+	}
+	@Transactional
+	public CameraPic getPicture(int id){
+		return cameraDao.getPicture(id);
+	}
+	@Transactional
+	public void deletePic(int picId){
+		cameraDao.deletePic(picId);
 	}
 }

@@ -1,23 +1,38 @@
 package org.triska.model;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
+import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.Lob;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.CascadeType;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 @Entity
-public class Camera {
+@Table(name = "camera")
+public class Camera implements java.io.Serializable{
 
 	@Id
-	@Column
+	@Column(name = "CAMERA_ID", unique = true, nullable = false)
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private int cameraId;
 	@Column
@@ -30,18 +45,17 @@ public class Camera {
 	private double lat;
 	@Column
 	private double lng;
+	@OneToMany(fetch = FetchType.LAZY, mappedBy = "camera")
+	@Cascade({CascadeType.ALL, CascadeType.DELETE_ORPHAN})
 	@Column
-	@Lob
-	private byte[] capturedImage;
-	@Column
-	@Temporal(TemporalType.TIMESTAMP)
-	private Date currentTime;
+	private List<CameraPic> capturedImages = new ArrayList<>();
+	
 
 	public Camera() {
 
 	}
 
-	public Camera(int cameraId, String crossroadName, String direction, String ipaddress, double lat, double lng, byte[] capturedImage, Date currentTime) {
+	public Camera(int cameraId, String crossroadName, String direction, String ipaddress, double lat, double lng, List<CameraPic> capturedImages) {
 		super();
 		this.cameraId = cameraId;
 		this.crossroadName = crossroadName;
@@ -49,8 +63,7 @@ public class Camera {
 		this.ipaddress = ipaddress;
 		this.lat = lat;
 		this.lng = lng;
-		this.capturedImage = capturedImage;
-		this.currentTime = currentTime;
+		this.capturedImages = capturedImages;
 	}
 
 	public int getCameraId() {
@@ -85,20 +98,12 @@ public class Camera {
 		this.ipaddress = ipaddress;
 	}
 
-	public byte[] getCapturedImage() {
-		return capturedImage;
+	public List<CameraPic> getCapturedImages() {
+		return capturedImages;
 	}
 
-	public void setCaptureIdmage(byte[] capturedImage) {
-		this.capturedImage = capturedImage;
-	}
-
-	public Date getCurrentTime() {
-		return currentTime;
-	}
-
-	public void setCurrentTime(Date currentTime) {
-		this.currentTime = currentTime;
+	public void setCapturedImages(List<CameraPic> capturedImages) {
+		this.capturedImages = capturedImages;
 	}
 
 	public double getLat() {
@@ -117,21 +122,4 @@ public class Camera {
 		this.lng = lng;
 	}
 
-	@Override
-	public int hashCode() {
-		 return (Double.valueOf(this.lat).hashCode() + Double.valueOf(this.lng).hashCode() + this.crossroadName.hashCode());        
-	}
-	
-	@Override
-	public boolean equals(Object obj) {
-	    // TODO Auto-generated method stub
-	    if(obj instanceof Camera)
-	    {
-	    	Camera temp = (Camera) obj;
-	        if(this.lat == temp.lat && this.lng== temp.lng && this.crossroadName.equals(temp.crossroadName))
-	            return true;
-	    }
-	    return false;
-	}
-	
 }
