@@ -1,6 +1,7 @@
 package org.triska.dao.impl;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.SessionFactory;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Repository;
 import org.triska.dao.CameraDao;
 import org.triska.model.Camera;
 import org.triska.model.CameraPic;
+import org.triska.model.CameraPicComparatorByDate;
 
 @Repository
 public class CameraDaoImpl implements CameraDao {
@@ -47,21 +49,25 @@ public class CameraDaoImpl implements CameraDao {
 		return cam;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public List<Camera> getAllCamera() {
-		return session.getCurrentSession().createQuery("from Camera").list();
+		return (List<Camera>) session.getCurrentSession().createQuery("from Camera").list();
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public List<Camera> getAllCameraWithPic() {
-		return session.getCurrentSession().createQuery("select distinct c from Camera c left join fetch c.capturedImages").list();
+		return (List<Camera>)session.getCurrentSession().createQuery("select distinct c from Camera c left join fetch c.capturedImages").list();
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public CameraPic getLastPic(int cameraId) {
-		List<CameraPic> cameraPic = session.getCurrentSession()
-				.createQuery("select c.capturedImages from Camera c where c.cameraId = :id order by c.capturedImages.currentTime DESC limit 1")
+		List<CameraPic> cameraPic = (List<CameraPic>) session.getCurrentSession()
+				.createQuery("SELECT DISTINCT c.capturedImages FROM Camera c WHERE c.cameraId = :id")
 				.setParameter("id", cameraId).list();
+		Collections.sort(cameraPic, new CameraPicComparatorByDate());
 		if (cameraPic.size() > 0) {
 			return cameraPic.get(0);
 		} else {
@@ -69,19 +75,19 @@ public class CameraDaoImpl implements CameraDao {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public List<CameraPic> geCamerasPicsByCrossroad(double lat, double lng) {
 		List<CameraPic> camPics = new ArrayList<>();
-		List<Camera> cameras = session.getCurrentSession().createQuery("from Camera c where c.lat = :lat and c.lng = :lng")
+		List<Camera> cameras = (List<Camera>) session.getCurrentSession().createQuery("from Camera c where c.lat = :lat and c.lng = :lng")
 				.setParameter("lat", lat)
 				.setParameter("lng", lng).list();
 		for (Camera camera : cameras) {
 			CameraPic pic = getLastPic(camera.getCameraId());
-			pic.setDirection(camera.getDirection());
-			camPics.add(pic);
-		}
-		for (CameraPic cameraPic : camPics) {
-			System.out.println("Mamm tohle: " + cameraPic.getId());
+			if(pic != null){
+				pic.setDirection(camera.getDirection());
+				camPics.add(pic);
+			}
 		}
 		return camPics;
 	}
@@ -97,9 +103,10 @@ public class CameraDaoImpl implements CameraDao {
 
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public List<CameraPic> getCameraPics(int cameraid) {
-		return session.getCurrentSession().createQuery("select c.capturedImages from Camera c where c.cameraId = :id").setParameter("id", cameraid)
+		return (List<CameraPic>) session.getCurrentSession().createQuery("select c.capturedImages from Camera c where c.cameraId = :id").setParameter("id", cameraid)
 				.list();
 	}
 }

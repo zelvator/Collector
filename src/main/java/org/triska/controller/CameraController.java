@@ -38,7 +38,6 @@ import org.triska.service.CameraService;
 public class CameraController {
 	@Autowired
 	private CameraService cameraService;
-	private boolean empty = false;
 
 	@Scheduled(cron = "0 0 0 * * ?")
 	public void onSchedule() {
@@ -46,13 +45,14 @@ public class CameraController {
 
 	@PostConstruct
 	public void onStartup() {
-		if(empty){
+		List<Camera> cameras = cameraService.getAllCamera();
+		if(cameras.isEmpty()){
 		 cameraService.deleteAllCameras();
 		 createStructure();
 		}
 	}
-	@Async
-	@Scheduled(fixedDelay = 300000) //5min
+	
+	@Scheduled(fixedRate = 300000) //5min
 	public void repeatedDelete() {
 		List<Camera> cameras = Collections.unmodifiableList(cameraService.getAllCameraWithPic());
 		long now = System.currentTimeMillis();
@@ -93,7 +93,7 @@ public class CameraController {
 		
 	}
 
-	static <T> List<List<T>> chopped(List<T> list, final int L) {
+	public static <T> List<List<T>> chopped(List<T> list, final int L) {
 	    List<List<T>> parts = new ArrayList<List<T>>();
 	    final int N = list.size();
 	    for (int i = 0; i < N; i += L) {
