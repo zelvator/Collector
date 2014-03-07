@@ -53,7 +53,6 @@ public class ShotCollector implements Runnable{
 			camPic.setCapturedImage(imageInByte);
 			camPic.setCurrentTime(new Date());
 			camPic.setCamera(camera);
-//			Hibernate.initialize(camWithPics.getCapturedImages());
 			camera.setCapturedImages(cameraService.getCameraPics(camera.getCameraId()));
 			camera.getCapturedImages().add(camPic);
 			cameraService.edit(camera);

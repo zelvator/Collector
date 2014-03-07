@@ -5,6 +5,7 @@ org\triska\model\Camera.class
 org\triska\controller\CameraController.class
 org\triska\service\CameraService.class
 org\triska\model\CameraPicComparatorByDate.class
+org\triska\controller\ShotRemover.class
 org\triska\dao\CameraDao.class
 org\triska\controller\ShotCollector.class
 org\triska\controller\TimedActions.class

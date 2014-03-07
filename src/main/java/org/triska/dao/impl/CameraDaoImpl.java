@@ -35,9 +35,16 @@ public class CameraDaoImpl implements CameraDao {
 		session.getCurrentSession().delete(getCamera(cameraid));
 
 	}
+	
+	@Override
+	public void deleteAllCameraPic() {
+		session.getCurrentSession().createQuery("delete from CameraPic").executeUpdate();
 
+	}
+	
 	@Override
 	public void deleteAllCameras() {
+		session.getCurrentSession().createQuery("delete from CameraPic").executeUpdate();
 		session.getCurrentSession().createQuery("delete from Camera").executeUpdate();
 		session.getCurrentSession().createSQLQuery("ALTER TABLE camera AUTO_INCREMENT = 1").executeUpdate();
 
@@ -77,7 +84,7 @@ public class CameraDaoImpl implements CameraDao {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public List<CameraPic> geCamerasPicsByCrossroad(double lat, double lng) {
+	public List<CameraPic> getCamerasPicsByGps(double lat, double lng) {
 		List<CameraPic> camPics = new ArrayList<>();
 		List<Camera> cameras = (List<Camera>) session.getCurrentSession().createQuery("from Camera c where c.lat = :lat and c.lng = :lng")
 				.setParameter("lat", lat)

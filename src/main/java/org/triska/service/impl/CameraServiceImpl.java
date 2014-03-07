@@ -40,6 +40,11 @@ public class CameraServiceImpl implements CameraService {
 	public List<Camera> getAllCamera() {
 		return cameraDao.getAllCamera();
 	}
+	
+	@Transactional
+	public void deleteAllCameraPic(){
+		cameraDao.deleteAllCameraPic();
+	}
 
 	@Transactional
 	public void deleteAllCameras() {
@@ -52,8 +57,8 @@ public class CameraServiceImpl implements CameraService {
 	}
 	
 	@Transactional
-	public List<CameraPic> geCamerasPicsByCrossroad(double lat, double lng){
-		return cameraDao.geCamerasPicsByCrossroad(lat, lng);
+	public List<CameraPic> getCamerasPicsByGps(double lat, double lng){
+		return cameraDao.getCamerasPicsByGps(lat, lng);
 	}
 
 	@Transactional

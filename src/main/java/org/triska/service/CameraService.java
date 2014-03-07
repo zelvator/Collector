@@ -18,11 +18,13 @@ public interface CameraService {
 	
 	public List<CameraPic> getCameraPics(int cameraId);
 	
+	public void deleteAllCameraPic();
+	
 	public void deleteAllCameras();
 	
 	public CameraPic getLastPic(int cameraId);
 	
-	public List<CameraPic> geCamerasPicsByCrossroad(double lat, double lng);
+	public List<CameraPic> getCamerasPicsByGps(double lat, double lng);
 
 	public List<Camera> getAllCameraWithPic();
 	
