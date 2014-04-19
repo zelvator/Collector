@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.NoRouteToHostException;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -63,7 +65,7 @@ public class CameraController {
 		for (Camera camera : cameras) {
 			camera.setCapturedImages(cameraService.getCameraPics(camera.getCameraId()));
 			for (CameraPic pic : camera.getCapturedImages()) {
-				if (pic.getCurrentTime().getTime() < now - 300000) {
+				if (pic.getCurrentTime().getTime() < now - 240000) {
 					System.out.println("Deleting this one");
 					cameraService.deletePic(pic.getId());
 				}
@@ -222,8 +224,22 @@ public class CameraController {
 			is = huc.getInputStream();
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
-		} catch (IOException e) {
+			return null;
+			
+		} catch(SocketTimeoutException e){
 			e.printStackTrace();
+			return null;
+		}catch(NoRouteToHostException e){
+			e.printStackTrace();
+			return null;
+		} 
+		catch (IOException e) {
+			e.printStackTrace();
+			return null;
+		}
+		catch (Exception e){
+			e.printStackTrace();
+			return null;
 		}
 
 		BufferedInputStream bis = new BufferedInputStream(is);
@@ -237,6 +253,7 @@ public class CameraController {
 			image = ImageIO.read(dis);
 		} catch (IOException e1) {
 			e1.printStackTrace();
+			return null;
 		}
 		try {
 			bis.close();
@@ -245,6 +262,7 @@ public class CameraController {
 			huc.disconnect();
 		} catch (IOException e) {
 			e.printStackTrace();
+			return null;
 		}
 
 		// System.out.println(image.toString());

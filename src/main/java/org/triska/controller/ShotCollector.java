@@ -5,10 +5,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.imageio.ImageIO;
 
+import org.springframework.orm.hibernate4.HibernateOptimisticLockingFailureException;
 import org.triska.model.Camera;
 import org.triska.model.CameraPic;
 import org.triska.service.CameraService;
@@ -27,7 +29,9 @@ public class ShotCollector implements Runnable{
 	public void run() {
 
 		BufferedImage img = null;
-		for (Camera camera : this.list) {
+		Iterator<Camera> it = list.iterator();
+		while(it.hasNext()){
+			Camera camera = (Camera) it.next();
 			img = CameraController.getCapturedImage(camera.getIpaddress());
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			byte[] imageInByte = null;
@@ -55,7 +59,13 @@ public class ShotCollector implements Runnable{
 			camPic.setCamera(camera);
 			camera.setCapturedImages(cameraService.getCameraPics(camera.getCameraId()));
 			camera.getCapturedImages().add(camPic);
-			cameraService.edit(camera);
+			try{
+				cameraService.edit(camera);
+			} catch (HibernateOptimisticLockingFailureException ex){
+				ex.printStackTrace();
+				continue;
+			}
+			
 		}
 		
 	}
